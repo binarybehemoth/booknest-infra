@@ -43,3 +43,8 @@ jobs:
             --item '{"id": {"N": "1"}, "title": {"S": "The Quiet Harbor"}}'
           aws lambda invoke --function-name booknest-count-books out.json
           cat out.json
+      - name: Remove the Lambda containers LocalStack started
+        if: always()
+        run: |
+          docker ps -q --filter network=${{ job.services.localstack.network }} \
+            --filter name=-lambda- | xargs -r docker rm -f
