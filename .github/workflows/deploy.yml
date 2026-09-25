@@ -14,9 +14,6 @@ jobs:
         image: localstack/localstack:4.13.1
         ports: ["4566:4566"]
         volumes: ["/var/run/docker.sock:/var/run/docker.sock"]
-        options: >-
-          --health-cmd "curl -fs localhost:4566/_localstack/health"
-          --health-interval 5s --health-retries 30
     env:
       AWS_ENDPOINT_URL: http://localhost:4566
       AWS_DEFAULT_REGION: us-east-1
