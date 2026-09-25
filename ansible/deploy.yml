@@ -1,0 +1,11 @@
+- name: Deploy BookNest's catalog stack
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Create or update the booknest-api stack
+      amazon.aws.cloudformation:
+        stack_name: booknest-api
+        state: present
+        region: us-east-1
+        template_body: "{{ lookup('file', '../packaged.yaml') }}"
+        capabilities: [CAPABILITY_IAM]

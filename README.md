@@ -6,5 +6,6 @@ BookNest's AWS side as code, deployed to LocalStack 4.13.1 (no AWS account neede
 - `api/index.mjs`: the function's code (counts the books in the table).
 - `cdk/`: the same resources as an AWS CDK app (`npx cdklocal synth`, `npx cdklocal deploy`).
 - `tofu/`: the table alone in OpenTofu, for comparison.
+- `ansible/deploy.yml`: an Ansible playbook that deploys the packaged template.
 - `.github/workflows/deploy.yml`: lints, packages and deploys the template to a LocalStack
   service container inside a GitHub-hosted job.
