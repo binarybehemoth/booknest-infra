@@ -1,0 +1,45 @@
+name: Deploy to LocalStack
+on:
+  push:
+    branches: [main]
+    paths: ["infra/**", "api/**", ".github/workflows/deploy.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    services:
+      localstack:
+        image: localstack/localstack:4.13.1
+        ports: ["4566:4566"]
+        volumes: ["/var/run/docker.sock:/var/run/docker.sock"]
+        options: >-
+          --health-cmd "curl -fs localhost:4566/_localstack/health"
+          --health-interval 5s --health-retries 30
+    env:
+      AWS_ENDPOINT_URL: http://localhost:4566
+      AWS_DEFAULT_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+    steps:
+      - uses: actions/checkout@v7
+      - name: Lint the templates
+        run: |
+          pipx install cfn-lint==1.57.0
+          cfn-lint && echo "cfn-lint: no findings"
+      - name: Package the Lambda code
+        run: |
+          aws s3 mb s3://booknest-artifacts
+          aws cloudformation package --template-file infra/catalog-api.yaml \
+            --s3-bucket booknest-artifacts --output-template-file packaged.yaml
+      - name: Deploy the stack
+        run: |
+          aws cloudformation deploy --stack-name booknest-api \
+            --template-file packaged.yaml --capabilities CAPABILITY_IAM
+      - name: Smoke-test the function
+        run: |
+          aws dynamodb put-item --table-name booknest-books \
+            --item '{"id": {"N": "1"}, "title": {"S": "The Quiet Harbor"}}'
+          aws lambda invoke --function-name booknest-count-books out.json
+          cat out.json

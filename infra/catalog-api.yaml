@@ -1,0 +1,42 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: BookNest's catalog table and a Lambda function that counts its books
+Resources:
+  BooksTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: booknest-books
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions: [{AttributeName: id, AttributeType: N}]
+      KeySchema: [{AttributeName: id, KeyType: HASH}]
+  CountRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: {Service: lambda.amazonaws.com}
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: scan-books
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: dynamodb:Scan
+                Resource: !GetAtt BooksTable.Arn
+  CountBooks:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: booknest-count-books
+      Runtime: nodejs24.x
+      Handler: index.handler
+      Role: !GetAtt CountRole.Arn
+      Code: ../api/
+      Environment:
+        Variables: {TABLE_NAME: !Ref BooksTable}
+Outputs:
+  FunctionName:
+    Value: !Ref CountBooks

@@ -1,0 +1,6 @@
+templates:
+  - infra/*.yaml
+regions:
+  - us-east-1
+ignore_checks:
+  - W3002 # local Code paths are intended: the workflow runs "aws cloudformation package"
